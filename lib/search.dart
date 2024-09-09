@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class Search extends StatelessWidget {
@@ -40,15 +38,32 @@ class Search extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          IconButton(
-            highlightColor: Colors.transparent,
-            padding: EdgeInsets.only(top: 1, right: 3),
-            onPressed: callback,
-            icon: Icon(
-              Icons.search,
-              size: height - 7,
+          SizedBox(
+            width: 30,
+            child: IconButton(
+              highlightColor: Colors.transparent,
+              padding: const EdgeInsets.only(top: 1, left: 5),
+              onPressed: callback,
+              icon: Icon(
+                Icons.search,
+                size: height - 7,
+              ),
             ),
-          )
+          ),
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: TextFormField(
+                cursorHeight: 22,
+                style: const TextStyle(
+                  fontWeight: FontWeight.normal,
+                ),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

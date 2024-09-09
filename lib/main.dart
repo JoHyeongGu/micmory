@@ -15,13 +15,22 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'micmory',
+      theme: ThemeData(
+        primaryColor: Colors.blueGrey,
+      ),
       home: MainPage(),
     );
   }
 }
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   MainPage({super.key});
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
   Map<String, void Function(bool)> callbackTrans = {};
 
   @override

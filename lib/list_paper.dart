@@ -9,7 +9,6 @@ class ListPaper extends StatefulWidget {
 }
 
 class _ListPaperState extends State<ListPaper> {
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -48,32 +47,23 @@ class _ContentsState extends State<Contents> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        IgnorePointer(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: turn ? 0 : MediaQuery.of(context).size.height,
-          ),
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 200),
+      padding: turn
+          ? const EdgeInsets.symmetric(horizontal: 30, vertical: 80)
+          : EdgeInsets.only(top: MediaQuery.of(context).size.height),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(7),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black,
+              blurRadius: 7,
+            )
+          ],
         ),
-        Flexible(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 80),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(7),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black,
-                    blurRadius: 7,
-                  )
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
