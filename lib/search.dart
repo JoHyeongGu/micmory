@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 class Search extends StatelessWidget {
@@ -47,24 +48,60 @@ class Search extends StatelessWidget {
               icon: Icon(
                 Icons.search,
                 size: height - 7,
+                color: Color.fromRGBO(135, 135, 135, 1.0),
               ),
             ),
           ),
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: TextFormField(
-                cursorHeight: 22,
-                style: const TextStyle(
-                  fontWeight: FontWeight.normal,
-                ),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                ),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 5),
+              child: InputBar(),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class InputBar extends StatefulWidget {
+  InputBar({super.key});
+
+  @override
+  State<InputBar> createState() => _InputBarState();
+}
+
+class _InputBarState extends State<InputBar> {
+  TextEditingController controller = TextEditingController();
+  List<String> hintList = [
+    "What is the talk you're finding?",
+    "Find your talk with the topic.",
+    "What did you say?",
+    "What was your opinion about it?",
+  ];
+  String selectedHint = "";
+
+  @override
+  void initState() {
+    super.initState();
+    selectedHint = hintList[Random().nextInt(hintList.length)];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      cursorHeight: 20,
+      style: const TextStyle(
+        fontWeight: FontWeight.normal,
+      ),
+      decoration: InputDecoration(
+        hintText: selectedHint,
+        hintStyle: const TextStyle(
+          fontSize: 15,
+          color: Color.fromRGBO(181, 181, 181, 1.0),
+        ),
+        border: InputBorder.none,
       ),
     );
   }

@@ -11,7 +11,7 @@ class BackVoid extends StatelessWidget {
         SizedBox(
           height: MediaQuery.of(context).size.height,
           child: Image.asset(
-            "assets/image/water_texture.gif",
+            "assets/image/gptWallpaper.png",
             fit: BoxFit.cover,
           ),
         ),
@@ -21,7 +21,7 @@ class BackVoid extends StatelessWidget {
               begin: Alignment.bottomCenter,
               end: Alignment.topCenter,
               colors: [
-                Colors.black.withOpacity(0.8),
+                Colors.black.withOpacity(0.7),
                 Colors.blueGrey.withOpacity(0.5),
                 Colors.white.withOpacity(0.4),
               ],
