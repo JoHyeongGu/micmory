@@ -3,7 +3,7 @@ import 'package:micmory/search.dart';
 
 class ListPaper extends StatefulWidget {
   ListPaper(this.callbackTrans, {super.key});
-  Map<String, void Function(bool)> callbackTrans;
+  Map callbackTrans;
 
   @override
   State<ListPaper> createState() => _ListPaperState();

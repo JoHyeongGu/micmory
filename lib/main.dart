@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:micmory/memory_save/list_paper.dart';
 import 'package:micmory/backvoid.dart';
 import 'package:micmory/search.dart';
@@ -35,68 +35,49 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  Map callbackTrans = {};
   SpeechToText speechToText = SpeechToText();
   bool speechEnabled = false;
-  String lastWords = '';
-
-  Map<String, void Function(bool)> callbackTrans = {};
+  String savedTalk = "";
 
   @override
   void initState() {
     super.initState();
     initSpeech();
-    callbackTrans["turnListening"] = turnListening;
-    print(callbackTrans);
+  }
+
+  Future checkMicPermission() async {
+    PermissionStatus permission = await Permission.microphone.request();
+    while (true) {
+      if (permission == PermissionStatus.granted) return;
+      await Future.delayed(const Duration(seconds: 1));
+    }
   }
 
   void initSpeech() async {
-    try {
-      late var permission;
-      while (true) {
-        permission = await Permission.microphone.request();
-        if (permission == PermissionStatus.granted) break;
-        await Future.delayed(Duration(seconds: 1));
-      }
-      if (permission == PermissionStatus.granted) {
-        speechEnabled = await speechToText.initialize();
-        if (speechEnabled) {
-          await speechToText.listen(
-            onResult: onSpeechResult,
-            localeId: "ko_KR",
-            pauseFor: Duration(minutes: 30),
-          );
-        }
-      } else {
-        print('Error: microphone permission denied');
-      }
-    } catch (e) {
-      print('Error: $e');
+    await checkMicPermission();
+    speechEnabled = await speechToText.initialize();
+    if (speechEnabled) {
+      startSpeechToTxt();
     }
-    print("Complete init speech");
-    print("$speechToText / $speechEnabled / $lastWords");
   }
 
-  void turnListening(bool _turn) async {
-    if (_turn) {
-      print(speechToText);
-      await speechToText.listen(
-          onResult: onSpeechResult, listenMode: ListenMode.dictation);
-      print("Start Listening");
-    } else {
-      await speechToText.stop();
-      print("Stop Listening");
+  void startSpeechToTxt() async {
+    // turn on the listening when it's finished.
+    while (true) {
+      if (speechToText.isNotListening) {
+        await speechToText.listen(onResult: onSpeechResult, localeId: "ko_KR");
+      }
+      await Future.delayed(const Duration(milliseconds: 100));
     }
-    print("$speechToText / $speechEnabled / $lastWords");
-    setState(() {});
   }
 
   void onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
-      lastWords = result.recognizedWords;
+      if (result.finalResult) {
+        savedTalk += "${result.recognizedWords}\n";
+      }
     });
-    print("SpeechResult!!");
-    print(
-        "$speechToText / $speechEnabled / $lastWords / ${speechToText.isListening}");
   }
 
   @override
@@ -105,23 +86,7 @@ class _MainPageState extends State<MainPage> {
       body: Stack(
         children: [
           BackVoid(callbackTrans),
-          Contents(callbackTrans),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(
-                top: 280,
-                left: 30,
-                right: 30,
-              ),
-              child: Text(
-                '"' + lastWords + '"',
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
+          Contents(savedTalk: savedTalk),
           ListPaper(callbackTrans),
         ],
       ),
@@ -130,22 +95,14 @@ class _MainPageState extends State<MainPage> {
 }
 
 class Contents extends StatefulWidget {
-  Contents(this.callbackTrans, {super.key});
-  Map<String, void Function(bool)> callbackTrans;
+  Contents({super.key, required this.savedTalk});
+  String savedTalk;
 
   @override
   State<Contents> createState() => _ContentsState();
 }
 
 class _ContentsState extends State<Contents> {
-  void test() {
-    if (widget.callbackTrans["turnListening"] != null) {
-      widget.callbackTrans["turnListening"]!(true);
-    } else {
-      print("cant find turnListening");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -157,7 +114,53 @@ class _ContentsState extends State<Contents> {
           Search(
             height: 30,
             width: 270,
-            callback: test,
+          ),
+          Container(
+            height: 70,
+            width: 270,
+            margin: const EdgeInsets.only(top: 15),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 7),
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: SingleChildScrollView(
+                      reverse: true,
+                      child: Text(
+                        widget.savedTalk.trim(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+                Opacity(
+                  opacity: 0.5,
+                  child: Container(
+                    height: 27,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(15)),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.mic,
+                        size: 25,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
