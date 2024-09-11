@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class BackVoid extends StatelessWidget {
-  BackVoid(this.callbackTrans, {super.key});
-  Map callbackTrans;
+  BackVoid(this.metaData, {super.key});
+  Map metaData;
 
   @override
   Widget build(BuildContext context) {
@@ -28,21 +28,21 @@ class BackVoid extends StatelessWidget {
             ),
           ),
         ),
-        TouchPad(callbackTrans),
+        TouchPad(metaData),
       ],
     );
   }
 }
 
 class TouchPad extends StatelessWidget {
-  TouchPad(this.callbackTrans, {super.key});
-  Map callbackTrans;
+  TouchPad(this.metaData, {super.key});
+  Map metaData;
 
   void turnOnOff(DragUpdateDetails details) {
     if (details.delta.dy > 5) {
-      callbackTrans["turnOnOff"]!(false);
+      metaData["turnOnOff"]!(false);
     } else if (details.delta.dy < -5) {
-      callbackTrans["turnOnOff"]!(true);
+      metaData["turnOnOff"]!(true);
     }
   }
 

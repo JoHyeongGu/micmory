@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:micmory/search.dart';
 
 class ListPaper extends StatefulWidget {
-  ListPaper(this.callbackTrans, {super.key});
-  Map callbackTrans;
+  ListPaper(this.metaData, {super.key});
+  Map metaData;
 
   @override
   State<ListPaper> createState() => _ListPaperState();
@@ -23,7 +23,7 @@ class _ListPaperState extends State<ListPaper> {
   void initState() {
     super.initState();
     turn = false;
-    widget.callbackTrans["turnOnOff"] = turnOnOff;
+    widget.metaData["turnOnOff"] = turnOnOff;
   }
 
   @override
@@ -60,7 +60,7 @@ class _ListPaperState extends State<ListPaper> {
           child: Column(
             children: [
               Search(height: 30, width: double.infinity),
-              const Flexible(child: Contents()),
+              Flexible(child: Contents(widget.metaData)),
             ],
           ),
         ),
@@ -70,39 +70,37 @@ class _ListPaperState extends State<ListPaper> {
 }
 
 class Contents extends StatefulWidget {
-  const Contents({super.key});
+  Contents(this.metaData, {super.key});
+  Map metaData;
 
   @override
   State<Contents> createState() => _ContentsState();
 }
 
 class _ContentsState extends State<Contents> {
+  late List dataList;
+
+  @override
+  void initState() {
+    super.initState();
+    dataList = widget.metaData["storage"].getKeys().toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: SingleChildScrollView(
         child: Column(
-          children: [
-            DateTile(
-              date: DateTime(2024, 9, 7),
-            ),
-            DateTile(
-              date: DateTime(2024, 9, 6),
-            ),
-            DateTile(
-              date: DateTime(2024, 9, 5),
-            ),
-            DateTile(
-              date: DateTime(2024, 9, 4),
-            ),
-            DateTile(
-              date: DateTime(2024, 9, 3),
-            ),
-            DateTile(
-              date: DateTime(2024, 9, 2),
-            ),
-          ],
+          children: dataList
+              .map(
+                (key) => DateTile(
+                  widget.metaData,
+                  date: key,
+                  text: widget.metaData["storage"].read(key),
+                ),
+              )
+              .toList(),
         ),
       ),
     );
@@ -110,11 +108,17 @@ class _ContentsState extends State<Contents> {
 }
 
 class DateTile extends StatelessWidget {
-  DateTile({super.key, required this.date});
-  DateTime date;
+  DateTile(this.metaData, {super.key, required this.date, required this.text});
+  Map metaData;
+  String date;
+  String text;
 
-  String strDate() {
-    return date.toString().split(" ")[0];
+  String previewText () {
+    List<String> lines = text.split('\n');
+    List<String> previewLine = lines.length > 5
+        ? lines.sublist(lines.length - 5)
+        : lines;
+    return previewLine.join('\n');
   }
 
   @override
@@ -135,17 +139,25 @@ class DateTile extends StatelessWidget {
       padding: const EdgeInsets.only(left: 15, right: 15, bottom: 20, top: 10),
       child: Column(
         children: [
-          Align(alignment: Alignment.centerLeft, child: Text(strDate())),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(date),
+          ),
           const SizedBox(height: 5),
           Container(
             color: Colors.blueGrey.withOpacity(0.4),
             height: 100,
+            width: double.infinity,
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(5),
                 splashColor: Colors.blueGrey.withOpacity(0.3),
                 onTap: () {},
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Text(previewText()),
+                ),
               ),
             ),
           ),

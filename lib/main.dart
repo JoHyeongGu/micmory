@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -8,7 +9,8 @@ import 'package:micmory/backvoid.dart';
 import 'package:micmory/search.dart';
 import 'package:micmory/logo.dart';
 
-void main() {
+void main() async {
+  await GetStorage.init();
   runApp(const MyApp());
 }
 
@@ -35,10 +37,12 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  Map callbackTrans = {};
-  SpeechToText speechToText = SpeechToText();
-  bool speechEnabled = false;
-  String savedTalk = "";
+  Map metaData = {
+    "speechToText": SpeechToText(),
+    "storage": GetStorage(),
+    "strDate": (DateTime date, {bool time = false}) =>
+        date.toString().split(" ")[time ? 1 : 0].split(".")[0],
+  };
 
   @override
   void initState() {
@@ -55,9 +59,15 @@ class _MainPageState extends State<MainPage> {
   }
 
   void initSpeech() async {
+    String key = metaData["strDate"](DateTime.now());
+    if (metaData["storage"].read(key) == null) {
+      metaData["storage"].write(key, "");
+    }
+    for (String key in metaData["storage"].getKeys()) {
+      print(key);
+    }
     await checkMicPermission();
-    speechEnabled = await speechToText.initialize();
-    if (speechEnabled) {
+    if (await metaData["speechToText"].initialize()) {
       startSpeechToTxt();
     }
   }
@@ -65,8 +75,9 @@ class _MainPageState extends State<MainPage> {
   void startSpeechToTxt() async {
     // turn on the listening when it's finished.
     while (true) {
-      if (speechToText.isNotListening) {
-        await speechToText.listen(onResult: onSpeechResult, localeId: "ko_KR");
+      if (metaData["speechToText"].isNotListening) {
+        await metaData["speechToText"]
+            .listen(onResult: onSpeechResult, localeId: "ko_KR");
       }
       await Future.delayed(const Duration(milliseconds: 100));
     }
@@ -75,7 +86,11 @@ class _MainPageState extends State<MainPage> {
   void onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
       if (result.finalResult) {
-        savedTalk += "${result.recognizedWords}\n";
+        String key = metaData["strDate"](DateTime.now());
+        print("today's key : $key");
+        String todayTalk = metaData["storage"].read(key) +
+            "${metaData["strDate"](DateTime.now(), time: true)} - ${result.recognizedWords}\n";
+        metaData["storage"].write(key, todayTalk);
       }
     });
   }
@@ -85,9 +100,11 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       body: Stack(
         children: [
-          BackVoid(callbackTrans),
-          Contents(savedTalk: savedTalk),
-          ListPaper(callbackTrans),
+          BackVoid(metaData),
+          Contents(
+              savedTalk: metaData["storage"]
+                  .read(metaData["strDate"](DateTime.now()))),
+          ListPaper(metaData),
         ],
       ),
     );
@@ -115,55 +132,70 @@ class _ContentsState extends State<Contents> {
             height: 30,
             width: 270,
           ),
-          Container(
-            height: 70,
-            width: 270,
-            margin: const EdgeInsets.only(top: 15),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(15),
+          NowRecord(widget.savedTalk),
+        ],
+      ),
+    );
+  }
+}
+
+class NowRecord extends StatefulWidget {
+  NowRecord(this.savedTalk, {super.key});
+  String savedTalk;
+
+  @override
+  State<NowRecord> createState() => _NowRecordState();
+}
+
+class _NowRecordState extends State<NowRecord> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 70,
+      width: 270,
+      margin: const EdgeInsets.only(top: 15),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 15),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: SingleChildScrollView(
+                reverse: true,
+                child: Text(
+                  widget.savedTalk.trim(),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ),
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 7),
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: SingleChildScrollView(
-                      reverse: true,
-                      child: Text(
-                        widget.savedTalk.trim(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
+          ),
+          Opacity(
+            opacity: 0.5,
+            child: Container(
+              height: 27,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.mic,
+                  size: 25,
+                  color: Colors.blueGrey,
                 ),
-                Opacity(
-                  opacity: 0.5,
-                  child: Container(
-                    height: 27,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(15)),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.mic,
-                        size: 25,
-                        color: Colors.blueGrey,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
       ),
     );
+    ;
   }
 }
